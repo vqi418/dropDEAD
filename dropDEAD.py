@@ -15,9 +15,12 @@ LISTBOX_SELECT_MODE_MULTIPLE = 'multi'
 
 BANDID = ''
 
+ids = []
+ids2 = {}
+
 cprint = sg.cprint
 
-ids = []
+d_switch = 'neutral'
 
 
 def get_key(val):
@@ -89,15 +92,24 @@ col2 = sg.Column([
 
     [sg.Frame('Date', [[sg.Column([
         [sg.Text(
-            'Please enter the Year Month and Day of the Show:\n (to list all shows in a Year, enter the Year only)\n '
-            'YYYY - MM - DD', font=('Times New Roman', 12, 'normal'), text_color='#E7D541')],
-        [sg.Input(key='-YEAR-', s=(5, 2), text_color='Yellow', font=('Times New Roman', 14, 'normal'), tooltip='Year',
-                  border_width=3, pad=(15, 5)),
-         sg.Input(key='-MONTH-', s=(3, 2), text_color='Yellow', font=('Times New Roman', 14, 'normal'), tooltip='Month',
-                  border_width=3, pad=(10, 5)),
-         sg.Input(key='-DAY-', s=(3, 2), text_color='Yellow', font=('Times New Roman', 14, 'normal'), tooltip='Day',
-                  border_width=3, pad=(10, 5))]])]],
-              title_color='Red', border_width=3, size=(400, 175), font=('Times New Roman', 14, 'normal'))],
+            'Please enter the Year, Month and Day of the Show:\n (to list all shows in a Year, enter the Year only)\n '
+            'YYYY  -  MM  -  DD', font=('Times New Roman', 12, 'normal'), justification='center',
+            text_color='#E7D541')],
+        [sg.Text(
+            '     Yearly show listings are presented as filenames, \n     due to excessive processing time and '
+            'the fact \n     I do not know what I am doing.', font=('Times New Roman', 9, 'normal'),
+            text_color='#E7D541', pad=(40, 5))],
+        [sg.Input(s=(5, 2), justification='center', text_color='Yellow', font=('Times New Roman', 14,
+                                                                               'normal'), tooltip='Year',
+                  border_width=3, pad=((80, 15), (5, 5)), key='-YEAR-'),
+         sg.Input(key='-MONTH-', s=(3, 2), justification='center', text_color='Yellow', font=('Times New Roman', 14,
+                                                                                              'normal'),
+                  tooltip='Month', border_width=3, pad=(15, 5)),
+         sg.Input(key='-DAY-', s=(3, 2), justification='center', text_color='Yellow', font=('Times New Roman', 14,
+                                                                                            'normal'), tooltip='Day',
+                  border_width=3, pad=(15, 5))]])]],
+              title_color='Red', border_width=3, size=(400, 210), font=('Times New Roman', 14, 'normal'),
+              element_justification='center')],
 
     [sg.Button('Search', border_width=3, button_color=('Red', '#2C2D2F'), font=('Times New Roman', 14, 'bold'),
                bind_return_key=True, key='-SETDATE-')]
@@ -111,7 +123,7 @@ fr_col1 = sg.Column([
                  text_color='#E7D541')],
         [sg.Listbox(ids, select_mode='multi', enable_events=False,
                     size=(70, 10), font=('Times New Roman', 12, 'normal'),
-                    text_color='Yellow', highlight_background_color='White',
+                    text_color='Yellow', highlight_background_color='Black',
                     highlight_text_color='Red',
                     key='-LISTBOX-')],
         [sg.Button('Download', border_width=3, button_color=('Red', '#2C2D2F'), font=('Times New Roman', 14, 'bold'),
@@ -156,9 +168,9 @@ prnt_win = sg.Column([
     [sg.Frame('Progress', [[sg.Column([
         [sg.Multiline(key='-ML-', border_width=3, size=(80, 10), autoscroll=True, background_color='Black',
                       text_color='#E7D541', font=('Times New Roman', 14, 'bold'), reroute_stdout=True,
-                      reroute_stderr=True, reroute_cprint=False, echo_stdout_stderr=True, write_only=True,
+                      reroute_stderr=True, reroute_cprint=True, echo_stdout_stderr=True, write_only=True,
                       auto_refresh=True)]
-    ])]], font=('Times New Roman', 14, 'normal'), title_color='Red', border_width=3,)]
+    ])]], font=('Times New Roman', 14, 'normal'), title_color='Red', border_width=3, )]
 ], key='-INFOBOX-', visible=False)
 
 layout = [
@@ -174,18 +186,18 @@ sg.cprint_set_output_destination(window, '-ML-')
 while True:
 
     event, values = window.read()
+    print(event, values)
     chosen = values
     if event == sg.WIN_CLOSED or event == 'Exit':
         break
     if event == '-SETDATE-':
-        window['GratefulDead'].reset_group()
-        window['-FLAC-'].reset_group()
+        xids = []
+        ids = []
+        ids2 = {}
         window['-YEAR-'].Update('')
         window['-MONTH-'].Update('')
         window['-DAY-'].Update('')
         window['-LISTBOX-'].Update('')
-        # window.FindElement('-FLAC-').Update('')
-        # window.FindElement('-MP3-').Update('')
         window['-FOLD-'].Update('')
         window['-INFOBOX-'].hide_row()
         window['-INFOBOX-'].Update(visible=False)
@@ -205,7 +217,28 @@ while True:
         query2 = ' title:' + showdate
         search = Search(s, (query1 + query2))
         for result in search:
-            ids.append(result['identifier'])
+            # iaid = result['identifier']
+            xids.append(result['identifier'])
+            # ids.append(result['identifier'])
+        for i in xids:
+            if month != '':
+                item = get_item(i)
+                date = item.item_metadata['metadata']['date']
+                venue = item.item_metadata['metadata']['venue']
+                try:
+                    topics = item.item_metadata['metadata']['subject']
+                    topics = str(topics)
+                    show = date + '-' + venue + ' - ' + topics
+                    ids.append(show)
+                    ids2[show] = i
+                except KeyError:
+                    show = date + '-' + venue
+                    ids.append(show)
+                    ids2[show] = i
+                d_switch = 'ON'
+            else:
+                ids.append(i)
+                d_switch = 'OFF'
         window['-LISTBOX-'].Update(ids)
     if event == '-GET_SHOW-':
         window['-ML-'].Update('')
@@ -223,20 +256,25 @@ while True:
         dforms = ['Text', 'Flac', '24bit Flac', 'Item Tile', 'JPEG', 'JPEG Thumb'] if down_info.get(
             '-FLAC-') is True else \
             ['Text', 'VBR MP3', 'Item Tile', 'JPEG', 'JPEG Thumb']
-        show_id = down_info.get('-LISTBOX-')
+        # show_id = down_info.get('-LISTBOX-')
+        show_id1 = down_info.get('-LISTBOX-')
+        show_id2 = str(show_id1)[1: - 1]
+        if d_switch == 'ON':
+            show_id3 = show_id2.strip("'")
+            show_id = ids2[show_id3]
+        else:
+            show_id = show_id2.strip("'")
         localdir = down_info.get('-DIR-')
-        SHOWID1 = str(show_id)[1: - 1]
-        SHOWID = SHOWID1.strip("'")
-        item = get_item(SHOWID)
+        item = get_item(show_id)
         metadata = item.item_metadata
         creator = metadata['metadata']['creator']
         date = metadata['metadata']['date']
         venue = metadata['metadata']['venue']
         album = date + ' - ' + venue
         localdir = localdir.rstrip('//')
-        print(dforms, localdir, SHOWID, creator, date, venue, album)
-        download(SHOWID, formats=dforms, verbose=True, ignore_existing=True, destdir=localdir, retries=3)
-        source_dir = localdir + '/' + SHOWID
+        # print(dforms, localdir, show_id, creator, date, venue, album)
+        download(show_id, formats=dforms, verbose=True, ignore_existing=True, destdir=localdir, retries=3)
+        source_dir = localdir + '/' + show_id
 
         MBID = ''
 
@@ -284,7 +322,8 @@ while True:
             elif BANDID == 'StringCheeseIncident':
                 MBID = 'cff95140-6d57-498a-8834-10eb72865b29'
             else:
-                print('Wooooo, hold on, gimmie time to think!!!! Something has gone terribly wrong')
+                cprint('Woooooah, hold on, gimmie time to think!!!! Something has gone terribly wrong', c='Red',
+                       b='Black', key='-ML-')
             if name.endswith(".flac"):
                 path = os.path.join(source_dir, name)
                 audio = FLAC(path)
@@ -295,7 +334,7 @@ while True:
                         ftrack = int(f1track)
                         tracknumber = f'{ftrack:02d}'
                         song_name = file_data['title']
-                        track_title = tracknumber + ' ' + song_name.replace('->', '').replace('>', '')\
+                        track_title = tracknumber + ' ' + song_name.replace('->', '').replace('>', '') \
                             .replace('/', '-').replace('*', '') + '.flac'
                         audio["title"] = song_name
                         audio["artist"] = creator
@@ -309,32 +348,30 @@ while True:
                         audio["originaldate"] = date
                         audio.save()
                         os.rename(source_dir + '/' + data_name, source_dir + '/' + track_title)
-            elif name.endswith(".mp3"):
-                path = os.path.join(source_dir, name)
-                audio = EasyID3(path)
-                for file_data in metadata['files']:
-                    if file_data['name'] == name:
-                        data_name = file_data['name']
-                        f1track = file_data['track']
-                        ftrack = int(f1track)
-                        tracknumber = f'{ftrack:02d}'
-                        song_name = file_data['title']
-                        track_title = tracknumber + ' ' + song_name.replace('->', '').replace('>', '')\
-                            .replace('/', '-').replace('*', '') + '.mp3'
-                        audio["title"] = song_name
-                        audio["artist"] = creator
-                        audio["album"] = album
-                        audio["tracknumber"] = tracknumber
-                        audio["date"] = date
-                        audio["albumartist"] = creator
-                        audio["albumartistsort"] = creator
-                        audio["artistsort"] = creator
-                        audio["musicbrainz_artistid"] = MBID
-                        audio["originaldate"] = date
-                        audio.save()
-                        os.rename(source_dir + '/' + data_name, source_dir + '/' + track_title)
-            else:
-                cprint('Hey its me, DAVE, I got the stuff!', c='Red',  b='White', key='-ML-')
-                ids = []
-                continue
+                    elif name.endswith(".mp3"):
+                        path = os.path.join(source_dir, name)
+                        audio = EasyID3(path)
+                        for f_data in metadata['files']:
+                            if f_data['name'] == name:
+                                data_name = f_data['name']
+                                f1track = f_data['track']
+                                ftrack = int(f1track)
+                                tracknumber = f'{ftrack:02d}'
+                                song_name = f_data['title']
+                                track_title = tracknumber + ' ' + song_name.replace('->', '').replace('>', '') \
+                                    .replace('/', '-').replace('*', '') + '.mp3'
+                                audio["title"] = song_name
+                                audio["artist"] = creator
+                                audio["album"] = album
+                                audio["tracknumber"] = tracknumber
+                                audio["date"] = date
+                                audio["albumartist"] = creator
+                                audio["albumartistsort"] = creator
+                                audio["artistsort"] = creator
+                                audio["musicbrainz_artistid"] = MBID
+                                audio["originaldate"] = date
+                                audio.save()
+                                os.rename(source_dir + '/' + data_name, source_dir + '/' + track_title)
+    cprint('Hey its me, DAVE, I got the stuff!', c='Black', b='Red', key='-ML-')
+
 window.close()
