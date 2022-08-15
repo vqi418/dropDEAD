@@ -15,6 +15,7 @@ LISTBOX_SELECT_MODE_MULTIPLE = "multi"
 
 BANDID = ""
 VENUE = ""
+VENUE_1 = ""
 
 ids = []
 ids2 = {}
@@ -725,7 +726,7 @@ while True:
                 item = get_item(i)
                 date = item.item_metadata["metadata"]["date"]
                 try:
-                    VENUE = item.item_metadata["metadata"]["VENUE"]
+                    VENUE_1 = item.item_metadata["metadata"]["VENUE"]
                 except KeyError:
                     VENUE_AVAIL = "OFF"
                 finally:
@@ -738,11 +739,11 @@ while True:
                         TOPICS = clean(TOPICS)
                     finally:
                         if VENUE_AVAIL == "ON" and SUBJECT_AVAIL == "ON":
-                            show = date + "-" + VENUE + " - " + TOPICS
+                            show = date + "-" + VENUE_1 + " - " + TOPICS
                         elif VENUE_AVAIL == "OFF" and SUBJECT_AVAIL == "ON":
                             show = date + " - " + TOPICS
                         elif VENUE_AVAIL == "ON" and SUBJECT_AVAIL == "OFF":
-                            show = date + "-" + VENUE
+                            show = date + "-" + VENUE_1
                         else:
                             show = date
                 ids.append(show)
@@ -772,18 +773,22 @@ while True:
         )
         SHOW_ID1 = down_info.get("-LISTBOX-")
         SHOW_ID2 = strip(SHOW_ID1)
-        if D_SWITCH == "ON":
+        if ids2 == {}:
+            SHOW_ID = clean(SHOW_ID2)
+        else:
             SHOW_ID3 = clean(SHOW_ID2)
             SHOW_ID = ids2[SHOW_ID3]
-        else:
-            SHOW_ID = clean(SHOW_ID2)
         localdir = down_info.get("-DIR-")
         item = get_item(SHOW_ID)
         metadata = item.item_metadata
         creator = metadata["metadata"]["creator"]
         date = metadata["metadata"]["date"]
-        VENUE = metadata["metadata"]["VENUE"]
-        album = date + " - " + VENUE
+        try:
+            VENUE = metadata["metadata"]["VENUE"]
+        except KeyError:
+            album = date + " - " + creator
+        else:
+            album = date + " - " + VENUE
         localdir = localdir.rstrip("//")
         download(
             SHOW_ID,
