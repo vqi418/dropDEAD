@@ -14,6 +14,7 @@ sg.theme("DarkBlack")
 LISTBOX_SELECT_MODE_MULTIPLE = "multi"
 
 BANDID = ""
+VENUE = ""
 
 ids = []
 ids2 = {}
@@ -21,6 +22,9 @@ ids2 = {}
 cprint = sg.cprint
 
 D_SWITCH = "neutral"
+VENUE_AVAIL = "ON"
+SUBJECT_AVAIL = "ON"
+TOPICS = ""
 
 DEAD_BASE64 = (
     b"iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXM"
@@ -372,23 +376,26 @@ col2 = sg.Column(
                                         text_color="#E7D541",
                                         tooltip="Year",
                                         border_width=3,
-                                        pad=((125, 15), (5, 5)),
+                                        enable_events=True,
                                         key="-YEAR-",
+                                        pad=((125, 15), (5, 5)),
                                     ),
                                     sg.Input(
-                                        key="-MONTH-",
                                         s=(3, 2),
                                         text_color="#E7D541",
                                         tooltip="Month",
                                         border_width=3,
+                                        enable_events=True,
+                                        key="-MONTH-",
                                         pad=(15, 5),
                                     ),
                                     sg.Input(
-                                        key="-DAY-",
                                         s=(3, 2),
                                         text_color="#E7D541",
                                         tooltip="Day",
                                         border_width=3,
+                                        enable_events=True,
+                                        key="-DAY-",
                                         pad=(15, 5),
                                     ),
                                 ],
@@ -517,7 +524,11 @@ fr_col2 = sg.Column(
                                                 )
                                             ],
                                             [
-                                                sg.In(s=(40, 60), text_color="#E7D541", key="-FOLD-"),
+                                                sg.In(
+                                                    s=(40, 60),
+                                                    text_color="#E7D541",
+                                                    key="-FOLD-",
+                                                ),
                                                 sg.FolderBrowse(
                                                     button_text="Browse",
                                                     button_color=("Red", "#2C2D2F"),
@@ -636,7 +647,8 @@ def get_key(val):
 
 def clean(filename):
     return (
-        str(filename).replace("->", "")
+        str(filename)
+        .replace("->", "")
         .replace(">", "")
         .replace("/", " - ")
         .replace("*", "")
@@ -646,10 +658,7 @@ def clean(filename):
 
 
 def strip(doc_name):
-    return (
-        str(doc_name).strip("'")
-        .strip("][")
-    )
+    return str(doc_name).strip("'").strip("][")
 
 
 while True:
@@ -659,7 +668,30 @@ while True:
     chosen = values
     if event == sg.WIN_CLOSED or event == "Exit":
         break
-
+    if (
+        event == "-YEAR-"
+        and values["-YEAR-"]
+        and values["-YEAR-"][-1] not in "0123456789"
+    ):
+        window["-YEAR-"].update(values["-YEAR-"][:-1])
+    if event == "-YEAR-" and len(values["-YEAR-"]) > 4:
+        window["-YEAR-"].update(values["-YEAR-"][:-1])
+    if (
+        event == "-MONTH-"
+        and values["-MONTH-"]
+        and values["-MONTH-"][-1] not in "0123456789"
+    ):
+        window["-MONTH-"].update(values["-MONTH-"][:-1])
+    if event == "-MONTH-" and len(values["-MONTH-"]) > 2:
+        window["-MONTH-"].update(values["-MONTH-"][:-1])
+    if (
+        event == "-DAY-"
+        and values["-DAY-"]
+        and values["-DAY-"][-1] not in "0123456789"
+    ):
+        window["-DAY-"].update(values["-DAY-"][:-1])
+    if event == "-DAY-" and len(values["-DAY-"]) > 2:
+        window["-DAY-"].update(values["-DAY-"][:-1])
     if event == "-SETDATE-":
         xids = []
         ids = []
@@ -692,18 +724,29 @@ while True:
             if month != "":
                 item = get_item(i)
                 date = item.item_metadata["metadata"]["date"]
-                venue = item.item_metadata["metadata"]["venue"]
                 try:
-                    TOPICS = item.item_metadata["metadata"]["subject"]
-                    TOPICS = str(TOPICS)
-                    TOPICS = clean(TOPICS)
-                    show = date + "-" + venue + " - " + TOPICS
-                    ids.append(show)
-                    ids2[show] = i
+                    VENUE = item.item_metadata["metadata"]["VENUE"]
                 except KeyError:
-                    show = date + "-" + venue
-                    ids.append(show)
-                    ids2[show] = i
+                    VENUE_AVAIL = "OFF"
+                finally:
+                    try:
+                        TOPICS = item.item_metadata["metadata"]["subject"]
+                    except KeyError:
+                        SUBJECT_AVAIL = "OFF"
+                    else:
+                        TOPICS = str(TOPICS)
+                        TOPICS = clean(TOPICS)
+                    finally:
+                        if VENUE_AVAIL == "ON" and SUBJECT_AVAIL == "ON":
+                            show = date + "-" + VENUE + " - " + TOPICS
+                        elif VENUE_AVAIL == "OFF" and SUBJECT_AVAIL == "ON":
+                            show = date + " - " + TOPICS
+                        elif VENUE_AVAIL == "ON" and SUBJECT_AVAIL == "OFF":
+                            show = date + "-" + VENUE
+                        else:
+                            show = date
+                ids.append(show)
+                ids2[show] = i
                 D_SWITCH = "ON"
             else:
                 ids.append(i)
@@ -739,8 +782,8 @@ while True:
         metadata = item.item_metadata
         creator = metadata["metadata"]["creator"]
         date = metadata["metadata"]["date"]
-        venue = metadata["metadata"]["venue"]
-        album = date + " - " + venue
+        VENUE = metadata["metadata"]["VENUE"]
+        album = date + " - " + VENUE
         localdir = localdir.rstrip("//")
         download(
             SHOW_ID,
