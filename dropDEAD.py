@@ -1,4 +1,5 @@
 import os
+import itertools
 from internetarchive.session import ArchiveSession
 from internetarchive.search import Search
 from internetarchive import download
@@ -639,11 +640,10 @@ window = sg.Window(
 
 sg.cprint_set_output_destination(window, "-ML-")
 
-
-def get_key(val):
-    for key, value in chosen.items():
-        if val == value:
-            return key
+# def get_key(val):
+#     for key, value in chosen.items():
+#         if val == value:
+#             return key
 
 
 def clean(filename):
@@ -685,11 +685,7 @@ while True:
         window["-MONTH-"].update(values["-MONTH-"][:-1])
     if event == "-MONTH-" and len(values["-MONTH-"]) > 2:
         window["-MONTH-"].update(values["-MONTH-"][:-1])
-    if (
-        event == "-DAY-"
-        and values["-DAY-"]
-        and values["-DAY-"][-1] not in "0123456789"
-    ):
+    if event == "-DAY-" and values["-DAY-"] and values["-DAY-"][-1] not in "0123456789":
         window["-DAY-"].update(values["-DAY-"][:-1])
     if event == "-DAY-" and len(values["-DAY-"]) > 2:
         window["-DAY-"].update(values["-DAY-"][:-1])
@@ -711,7 +707,10 @@ while True:
         window["-COL2-"].unhide_row()
         window["-COL2-"].Update(visible=True)
         window["-BOXFRAME-"].Update(visible=True)
-        BANDID = get_key(True)
+        band_range = dict(itertools.islice(chosen.items(), 0, 20, 1))
+        for key, value in band_range.items():
+            if True is value:
+                BANDID = key
         year = chosen.get("-YEAR-")
         month = chosen.get("-MONTH-")
         day = chosen.get("-DAY-")
@@ -726,7 +725,7 @@ while True:
                 item = get_item(i)
                 date = item.item_metadata["metadata"]["date"]
                 try:
-                    VENUE_1 = item.item_metadata["metadata"]["VENUE"]
+                    VENUE_1 = item.item_metadata["metadata"]["venue"]
                 except KeyError:
                     VENUE_AVAIL = "OFF"
                 finally:
@@ -773,7 +772,7 @@ while True:
         )
         SHOW_ID1 = down_info.get("-LISTBOX-")
         SHOW_ID2 = strip(SHOW_ID1)
-        if ids2 == {}:
+        if ids2 is {}:
             SHOW_ID = clean(SHOW_ID2)
         else:
             SHOW_ID3 = clean(SHOW_ID2)
@@ -784,7 +783,7 @@ while True:
         creator = metadata["metadata"]["creator"]
         date = metadata["metadata"]["date"]
         try:
-            VENUE = metadata["metadata"]["VENUE"]
+            VENUE = metadata["metadata"]["venue"]
         except KeyError:
             album = date + " - " + creator
         else:
@@ -863,12 +862,7 @@ while True:
                         ftrack = int(f1track)
                         tracknumber = f"{ftrack:02d}"
                         song_name = file_data["title"]
-                        track_title = (
-                            tracknumber
-                            + " "
-                            + clean(song_name)
-                            + ".flac"
-                        )
+                        track_title = tracknumber + " " + clean(song_name) + ".flac"
                         audio["title"] = song_name
                         audio["artist"] = creator
                         audio["album"] = album
@@ -894,10 +888,7 @@ while True:
                                 tracknumber = f"{ftrack:02d}"
                                 song_name = f_data["title"]
                                 track_title = (
-                                    tracknumber
-                                    + " "
-                                    + clean(song_name)
-                                    + ".mp3"
+                                    tracknumber + " " + clean(song_name) + ".mp3"
                                 )
                                 audio["title"] = song_name
                                 audio["artist"] = creator
