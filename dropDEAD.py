@@ -14,19 +14,28 @@ sg.theme("DarkBlack")
 
 LISTBOX_SELECT_MODE_MULTIPLE = "multi"
 
-BANDID = ""
-VENUE = ""
-VENUE_1 = ""
-
-ids = []
-ids2 = {}
+IDS = []
+IDS2 = {}
 
 cprint = sg.cprint
 
-D_SWITCH = "neutral"
+FULL_DATE_SEARCH = "neutral"
+BANDID = ""
+VENUE = ""
+VENUE_1 = ""
 VENUE_AVAIL = "ON"
-SUBJECT_AVAIL = "ON"
+TOPICS_AVAIL = "ON"
 TOPICS = ""
+CITY_AVAIL = "ON"
+CITY = ""
+SOURCE_AVAIL = "ON"
+SOURCE = ""
+COLLECTION_AVAIL = "ON"
+COLLECTION = ""
+# LINEAGE_AVAIL = "ON"
+AUDIENCE = "OFF"
+SOUNDBOARD = "OFF"
+RECORDING = ""
 
 DEAD_BASE64 = (
     b"iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXM"
@@ -83,7 +92,7 @@ DEAD_BASE64 = (
     b"gWoruBhn7G5f8Fob1bA357AgAAAABJRU5ErkJggg=="
 )
 
-bnd_col1 = sg.Column(
+BND_COL1 = sg.Column(
     [
         [
             sg.Radio(
@@ -165,7 +174,7 @@ bnd_col1 = sg.Column(
     ]
 )
 
-bnd_col2 = sg.Column(
+BND_COL2 = sg.Column(
     [
         [
             sg.Radio(
@@ -247,7 +256,7 @@ bnd_col2 = sg.Column(
     ]
 )
 
-bnd_col3 = sg.Column(
+BND_COL3 = sg.Column(
     [
         [
             sg.Radio(
@@ -329,14 +338,14 @@ bnd_col3 = sg.Column(
     ]
 )
 
-bnd_frm_layout = [[bnd_col1, bnd_col2, bnd_col3]]
+BND_FRM_LAYOUT = [[BND_COL1, BND_COL2, BND_COL3]]
 
-col1 = sg.Column(
+COL1 = sg.Column(
     [
         [
             sg.Frame(
                 "Bands",
-                bnd_frm_layout,
+                BND_FRM_LAYOUT,
                 title_color="Red",
                 background_color="#03020f",
                 border_width=3,
@@ -345,7 +354,7 @@ col1 = sg.Column(
     ]
 )
 
-col2 = sg.Column(
+COL2 = sg.Column(
     [
         [
             sg.Frame(
@@ -423,7 +432,7 @@ col2 = sg.Column(
     ]
 )
 
-fr_col1 = sg.Column(
+FR_COL1 = sg.Column(
     [
         [sg.Image(size=(0, 0))],
         [
@@ -437,7 +446,7 @@ fr_col1 = sg.Column(
                     ],
                     [
                         sg.Listbox(
-                            ids,
+                            IDS,
                             select_mode="multi",
                             enable_events=False,
                             size=(70, 10),
@@ -465,7 +474,7 @@ fr_col1 = sg.Column(
     visible=False,
 )
 
-fr_col2 = sg.Column(
+FR_COL2 = sg.Column(
     [
         [sg.Image(size=(0, 0))],
         [
@@ -559,14 +568,14 @@ fr_col2 = sg.Column(
     visible=False,
 )
 
-frame1_layout = [[fr_col1, fr_col2]]
+FRAME1_LAYOUT = [[FR_COL1, FR_COL2]]
 
-box_layout = sg.Column(
+BOX_LAYOUT = sg.Column(
     [
         [
             sg.Frame(
                 "Shows",
-                frame1_layout,
+                FRAME1_LAYOUT,
                 title_color="Red",
                 background_color="#03020f",
                 border_width=3,
@@ -579,7 +588,7 @@ box_layout = sg.Column(
     visible=False,
 )
 
-prnt_win = sg.Column(
+PRNT_WIN = sg.Column(
     [
         [sg.Image(size=(0, 0))],
         [
@@ -621,11 +630,11 @@ prnt_win = sg.Column(
     visible=False,
 )
 
-layout = [[col1, col2], [prnt_win], [box_layout]]
+LAYOUT = [[COL1, COL2], [PRNT_WIN], [BOX_LAYOUT]]
 
-window = sg.Window(
+WINDOW = sg.Window(
     "dropDEAD - Archive Downloader",
-    layout,
+    LAYOUT,
     auto_size_text=True,
     relative_location=(0, -150),
     font=("Times New Roman", 14, "normal"),
@@ -638,15 +647,10 @@ window = sg.Window(
     icon=DEAD_BASE64,
 )
 
-sg.cprint_set_output_destination(window, "-ML-")
-
-# def get_key(val):
-#     for key, value in chosen.items():
-#         if val == value:
-#             return key
+sg.cprint_set_output_destination(WINDOW, "-ML-")
 
 
-def clean(filename):
+def _clean_(filename):
     return (
         str(filename)
         .replace("->", "")
@@ -658,15 +662,15 @@ def clean(filename):
     )
 
 
-def strip(doc_name):
+def _strip_(doc_name):
     return str(doc_name).strip("'").strip("][")
 
 
 while True:
 
-    event, values = window.read()
+    event, values = WINDOW.read()
     print(event, values)
-    chosen = values
+    CHOSEN = values
     if event == sg.WIN_CLOSED or event == "Exit":
         break
     if (
@@ -674,134 +678,257 @@ while True:
         and values["-YEAR-"]
         and values["-YEAR-"][-1] not in "0123456789"
     ):
-        window["-YEAR-"].update(values["-YEAR-"][:-1])
+        WINDOW["-YEAR-"].update(values["-YEAR-"][:-1])
     if event == "-YEAR-" and len(values["-YEAR-"]) > 4:
-        window["-YEAR-"].update(values["-YEAR-"][:-1])
+        WINDOW["-YEAR-"].update(values["-YEAR-"][:-1])
     if (
         event == "-MONTH-"
         and values["-MONTH-"]
         and values["-MONTH-"][-1] not in "0123456789"
     ):
-        window["-MONTH-"].update(values["-MONTH-"][:-1])
+        WINDOW["-MONTH-"].update(values["-MONTH-"][:-1])
     if event == "-MONTH-" and len(values["-MONTH-"]) > 2:
-        window["-MONTH-"].update(values["-MONTH-"][:-1])
+        WINDOW["-MONTH-"].update(values["-MONTH-"][:-1])
     if event == "-DAY-" and values["-DAY-"] and values["-DAY-"][-1] not in "0123456789":
-        window["-DAY-"].update(values["-DAY-"][:-1])
+        WINDOW["-DAY-"].update(values["-DAY-"][:-1])
     if event == "-DAY-" and len(values["-DAY-"]) > 2:
-        window["-DAY-"].update(values["-DAY-"][:-1])
+        WINDOW["-DAY-"].update(values["-DAY-"][:-1])
     if event == "-SETDATE-":
-        xids = []
-        ids = []
-        ids2 = {}
-        window["-YEAR-"].Update("")
-        window["-MONTH-"].Update("")
-        window["-DAY-"].Update("")
-        window["-LISTBOX-"].Update("")
-        window["-FOLD-"].Update("")
-        window["-INFOBOX-"].hide_row()
-        window["-INFOBOX-"].Update(visible=False)
-        window["-BOXCOL-"].unhide_row()
-        window["-BOXCOL-"].Update(visible=True)
-        window["-COL1-"].unhide_row()
-        window["-COL1-"].Update(visible=True)
-        window["-COL2-"].unhide_row()
-        window["-COL2-"].Update(visible=True)
-        window["-BOXFRAME-"].Update(visible=True)
-        band_range = dict(itertools.islice(chosen.items(), 0, 20, 1))
-        for key, value in band_range.items():
+        XIDS = []
+        IDS = []
+        IDS2 = {}
+        WINDOW["-YEAR-"].Update("")
+        WINDOW["-MONTH-"].Update("")
+        WINDOW["-DAY-"].Update("")
+        WINDOW["-LISTBOX-"].Update("")
+        WINDOW["-FOLD-"].Update("")
+        WINDOW["-INFOBOX-"].hide_row()
+        WINDOW["-INFOBOX-"].Update(visible=False)
+        WINDOW["-BOXCOL-"].unhide_row()
+        WINDOW["-BOXCOL-"].Update(visible=True)
+        WINDOW["-COL1-"].unhide_row()
+        WINDOW["-COL1-"].Update(visible=True)
+        WINDOW["-COL2-"].unhide_row()
+        WINDOW["-COL2-"].Update(visible=True)
+        WINDOW["-BOXFRAME-"].Update(visible=True)
+        BAND_RANGE = dict(itertools.islice(CHOSEN.items(), 0, 20, 1))
+        for key, value in BAND_RANGE.items():
             if True is value:
                 BANDID = key
-        year = chosen.get("-YEAR-")
-        month = chosen.get("-MONTH-")
-        day = chosen.get("-DAY-")
-        showdate = year + "-" + month + "-" + day
-        query1 = "collection:" + BANDID
-        query2 = " title:" + showdate
-        search = Search(s, (query1 + query2))
-        for result in search:
-            xids.append(result["identifier"])
-        for i in xids:
-            if month != "":
-                item = get_item(i)
-                date = item.item_metadata["metadata"]["date"]
+        YEAR = CHOSEN.get("-YEAR-")
+        MONTH = CHOSEN.get("-MONTH-")
+        DAY = CHOSEN.get("-DAY-")
+        SHOWDATE = YEAR + "-" + MONTH + "-" + DAY
+        QUERY1 = "collection:" + BANDID
+        QUERY2 = " title:" + SHOWDATE
+        SEARCH = Search(s, (QUERY1 + QUERY2))
+        for result in SEARCH:
+            XIDS.append(result["identifier"])
+        for i in XIDS:
+            if MONTH != "":
+                AUDIENCE = "OFF"
+                SOUNDBOARD = "OFF"
+                ITEM = get_item(i)
+                DATE = ITEM.item_metadata["metadata"]["date"]
                 try:
-                    VENUE_1 = item.item_metadata["metadata"]["venue"]
+                    VENUE_1 = ITEM.item_metadata["metadata"]["venue"]
                 except KeyError:
                     VENUE_AVAIL = "OFF"
+                else:
+                    VENUE_1 = str(VENUE_1)
+                    VENUE_1 = _clean_(VENUE_1)
+                try:
+                    TOPICS = ITEM.item_metadata["metadata"]["subject"]
+                except KeyError:
+                    TOPICS_AVAIL = "OFF"
+                else:
+                    TOPICS = str(TOPICS)
+                    TOPICS = _clean_(TOPICS)
+                    if "audience" in TOPICS.lower():
+                        AUDIENCE = "ON"
+                        TOPICS = TOPICS.replace("Audience;", "")
+                try:
+                    CITY = ITEM.item_metadata["metadata"]["coverage"]
+                except KeyError:
+                    CITY_AVAIL = "OFF"
+                else:
+                    CITY = str(CITY)
+                    CITY = _clean_(CITY)
+                try:
+                    SOURCE = ITEM.item_metadata["metadata"]["source"]
+                except KeyError:
+                    SOURCE_AVAIL = "OFF"
+                else:
+                    SOURCE = str(SOURCE)
+                    SOURCE = _clean_(SOURCE)
+                    if "sbd" or "soundboard" in SOURCE.lower():
+                        SOUNDBOARD = "ON"
+                try:
+                    COLLECTION = ITEM.item_metadata["metadata"]["collection"]
+                except KeyError:
+                    COLLECTION_AVAIL = "OFF"
+                else:
+                    COLLECTION = str(COLLECTION)
+                    COLLECTION = _clean_(COLLECTION)
+                    if "stream_only" in COLLECTION.lower():
+                        SOUNDBOARD = "ON"
+                # try:
+                #     LINEAGE = ITEM.item_metadata["metadata"]["lineage"]
+                # except KeyError:
+                #     LINEAGE_AVAIL = "OFF"
+                # else:
+                #     LINEAGE = str(LINEAGE)
+                #     LINEAGE = _clean_(LINEAGE)
+                # try:
+                #     TITLE = ITEM.item_metadata["metadata"]["title"]
+                # except KeyError:
+                #     TITLE_AVAIL = "OFF"
+                # else:
+                #     TITLE = str(TITLE)
+                #     TITLE = _clean_(TITLE)
                 finally:
-                    try:
-                        TOPICS = item.item_metadata["metadata"]["subject"]
-                    except KeyError:
-                        SUBJECT_AVAIL = "OFF"
+                    if SOUNDBOARD == "ON":
+                        RECORDING = "Soundboard"
+                        TOPICS = TOPICS.replace("Soundboard;", "")
+                    if AUDIENCE == "ON":
+                        RECORDING = "Audience"
+                    if (
+                        VENUE_AVAIL == "ON"
+                        and CITY_AVAIL == "ON"
+                        and TOPICS_AVAIL == "ON"
+                    ):
+                        SHOW = (
+                            DATE
+                            + "-"
+                            + VENUE_1
+                            + ", "
+                            + CITY
+                            + " "
+                            + "["
+                            + RECORDING
+                            + "]"
+                            + " - "
+                            + TOPICS
+                        )
+                    elif (
+                        VENUE_AVAIL == "OFF"
+                        and CITY_AVAIL == "ON"
+                        and TOPICS_AVAIL == "ON"
+                    ):
+                        SHOW = (
+                            DATE
+                            + ", "
+                            + CITY
+                            + " "
+                            + "["
+                            + RECORDING
+                            + "]"
+                            + " - "
+                            + TOPICS
+                        )
+                    elif (
+                        VENUE_AVAIL == "ON"
+                        and CITY_AVAIL == "OFF"
+                        and TOPICS_AVAIL == "ON"
+                    ):
+                        SHOW = (
+                            DATE
+                            + "-"
+                            + VENUE_1
+                            + " "
+                            + "["
+                            + RECORDING
+                            + "]"
+                            + " - "
+                            + TOPICS
+                        )
+                    elif (
+                        VENUE_AVAIL == "ON"
+                        and CITY_AVAIL == "ON"
+                        and TOPICS_AVAIL == "OFF"
+                    ):
+                        SHOW = (
+                            DATE
+                            + "-"
+                            + VENUE_1
+                            + ", "
+                            + CITY
+                            + " "
+                            + "["
+                            + RECORDING
+                            + "]"
+                        )
+                    elif (
+                        VENUE_AVAIL == "OFF"
+                        and CITY_AVAIL == "OFF"
+                        and TOPICS_AVAIL == "ON"
+                    ):
+                        SHOW = DATE + " " + "[" + RECORDING + "]" + " - " + TOPICS
+                    elif (
+                        VENUE_AVAIL == "ON"
+                        and CITY_AVAIL == "OFF"
+                        and TOPICS_AVAIL == "OFF"
+                    ):
+                        SHOW = DATE + "-" + VENUE_1 + " " + "[" + RECORDING + "]"
                     else:
-                        TOPICS = str(TOPICS)
-                        TOPICS = clean(TOPICS)
-                    finally:
-                        if VENUE_AVAIL == "ON" and SUBJECT_AVAIL == "ON":
-                            show = date + "-" + VENUE_1 + " - " + TOPICS
-                        elif VENUE_AVAIL == "OFF" and SUBJECT_AVAIL == "ON":
-                            show = date + " - " + TOPICS
-                        elif VENUE_AVAIL == "ON" and SUBJECT_AVAIL == "OFF":
-                            show = date + "-" + VENUE_1
-                        else:
-                            show = date
-                ids.append(show)
-                ids2[show] = i
-                D_SWITCH = "ON"
+                        SHOW = DATE + " " + "[" + RECORDING + "]"
+                    IDS.append(SHOW)
+                    IDS2[SHOW] = i
+                    FULL_DATE_SEARCH = "ON"
             else:
-                ids.append(i)
-                D_SWITCH = "OFF"
-        window["-LISTBOX-"].Update(ids)
+                IDS.append(i)
+                FULL_DATE_SEARCH = "OFF"
+        WINDOW["-LISTBOX-"].Update(IDS)
     if event == "-GET_SHOW-":
-        window["-ML-"].Update("")
-        window["-BOXFRAME-"].Update(visible=False)
-        window["-BOXCOL-"].Update(visible=False)
-        window["-BOXCOL-"].hide_row()
-        window["-COL1-"].Update(visible=False)
-        window["-COL2-"].Update(visible=False)
-        window["-COL1-"].hide_row()
-        window["-COL2-"].hide_row()
-        window["-INFOBOX-"].unhide_row()
-        window["-INFOBOX-"].Update(visible=True)
+        WINDOW["-ML-"].Update("")
+        WINDOW["-BOXFRAME-"].Update(visible=False)
+        WINDOW["-BOXCOL-"].Update(visible=False)
+        WINDOW["-BOXCOL-"].hide_row()
+        WINDOW["-COL1-"].Update(visible=False)
+        WINDOW["-COL2-"].Update(visible=False)
+        WINDOW["-COL1-"].hide_row()
+        WINDOW["-COL2-"].hide_row()
+        WINDOW["-INFOBOX-"].unhide_row()
+        WINDOW["-INFOBOX-"].Update(visible=True)
 
-        down_info = values
-        dforms = (
+        DOWN_INFO = values
+        DFORMS = (
             ["Text", "Flac", "24bit Flac", "Item Tile", "JPEG", "JPEG Thumb"]
-            if down_info.get("-FLAC-") is True
+            if DOWN_INFO.get("-FLAC-") is True
             else ["Text", "VBR MP3", "Item Tile", "JPEG", "JPEG Thumb"]
         )
-        SHOW_ID1 = down_info.get("-LISTBOX-")
-        SHOW_ID2 = strip(SHOW_ID1)
-        if ids2 is {}:
-            SHOW_ID = clean(SHOW_ID2)
+        SHOW_ID1 = DOWN_INFO.get("-LISTBOX-")
+        SHOW_ID2 = _strip_(SHOW_ID1)
+        if IDS2 == {}:
+            SHOW_ID = _clean_(SHOW_ID2)
         else:
-            SHOW_ID3 = clean(SHOW_ID2)
-            SHOW_ID = ids2[SHOW_ID3]
-        localdir = down_info.get("-DIR-")
-        item = get_item(SHOW_ID)
-        metadata = item.item_metadata
-        creator = metadata["metadata"]["creator"]
-        date = metadata["metadata"]["date"]
+            SHOW_ID3 = _clean_(SHOW_ID2)
+            SHOW_ID = IDS2[SHOW_ID3]
+        LOCALDIR = DOWN_INFO.get("-DIR-")
+        ITEM = get_item(SHOW_ID)
+        METADATA = ITEM.item_metadata
+        CREATOR = METADATA["metadata"]["creator"]
+        DATE = METADATA["metadata"]["date"]
         try:
-            VENUE = metadata["metadata"]["venue"]
+            VENUE = METADATA["metadata"]["venue"]
         except KeyError:
-            album = date + " - " + creator
+            ALBUM = DATE + " - " + CREATOR
         else:
-            album = date + " - " + VENUE
-        localdir = localdir.rstrip("//")
+            ALBUM = DATE + " - " + VENUE
+        LOCALDIR = LOCALDIR.rstrip("//")
         download(
             SHOW_ID,
-            formats=dforms,
+            formats=DFORMS,
             verbose=True,
             ignore_existing=True,
-            destdir=localdir,
+            destdir=LOCALDIR,
             retries=3,
         )
-        source_dir = localdir + "/" + SHOW_ID
+        SOURCE_DIR = LOCALDIR + "/" + SHOW_ID
 
         MBID = ""
 
-        for name in os.listdir(source_dir):
+        for name in os.listdir(SOURCE_DIR):
             if BANDID == "GratefulDead":
                 MBID = "6faa7ca7-0d99-4a5e-bfa6-1fd5037520c6"
             elif BANDID == "LittleFeat":
@@ -853,58 +980,58 @@ while True:
                     key="-ML-",
                 )
             if name.endswith(".flac"):
-                path = os.path.join(source_dir, name)
-                audio = FLAC(path)
-                for file_data in metadata["files"]:
+                PATH = os.path.join(SOURCE_DIR, name)
+                audio = FLAC(PATH)
+                for file_data in METADATA["files"]:
                     if file_data["name"] == name:
-                        data_name = file_data["name"]
-                        f1track = file_data["track"]
-                        ftrack = int(f1track)
-                        tracknumber = f"{ftrack:02d}"
-                        song_name = file_data["title"]
-                        track_title = tracknumber + " " + clean(song_name) + ".flac"
-                        audio["title"] = song_name
-                        audio["artist"] = creator
-                        audio["album"] = album
-                        audio["tracknumber"] = tracknumber
-                        audio["date"] = date
-                        audio["albumartist"] = creator
-                        audio["albumartistsort"] = creator
-                        audio["artistsort"] = creator
+                        DATA_NAME = file_data["name"]
+                        F1TRACK = file_data["track"]
+                        FTRACK = int(F1TRACK)
+                        TRACKNUMBER = f"{FTRACK:02d}"
+                        SONG_NAME = file_data["title"]
+                        TRACK_TITLE = TRACKNUMBER + " " + _clean_(SONG_NAME) + ".flac"
+                        audio["title"] = SONG_NAME
+                        audio["artist"] = CREATOR
+                        audio["album"] = ALBUM
+                        audio["tracknumber"] = TRACKNUMBER
+                        audio["date"] = DATE
+                        audio["albumartist"] = CREATOR
+                        audio["albumartistsort"] = CREATOR
+                        audio["artistsort"] = CREATOR
                         audio["musicbrainz_artistid"] = MBID
-                        audio["originaldate"] = date
+                        audio["originaldate"] = DATE
                         audio.save()
                         os.rename(
-                            source_dir + "/" + data_name, source_dir + "/" + track_title
+                            SOURCE_DIR + "/" + DATA_NAME, SOURCE_DIR + "/" + TRACK_TITLE
                         )
                     elif name.endswith(".mp3"):
-                        path = os.path.join(source_dir, name)
-                        audio = EasyID3(path)
-                        for f_data in metadata["files"]:
-                            if f_data["name"] == name:
-                                data_name = f_data["name"]
-                                f1track = f_data["track"]
-                                ftrack = int(f1track)
-                                tracknumber = f"{ftrack:02d}"
-                                song_name = f_data["title"]
-                                track_title = (
-                                    tracknumber + " " + clean(song_name) + ".mp3"
+                        PATH = os.path.join(SOURCE_DIR, name)
+                        audio = EasyID3(PATH)
+                        for F_DATA in METADATA["files"]:
+                            if F_DATA["name"] == name:
+                                DATA_NAME = F_DATA["name"]
+                                F1TRACK = F_DATA["track"]
+                                FTRACK = int(F1TRACK)
+                                TRACKNUMBER = f"{FTRACK:02d}"
+                                SONG_NAME = F_DATA["title"]
+                                TRACK_TITLE = (
+                                    TRACKNUMBER + " " + _clean_(SONG_NAME) + ".mp3"
                                 )
-                                audio["title"] = song_name
-                                audio["artist"] = creator
-                                audio["album"] = album
-                                audio["tracknumber"] = tracknumber
-                                audio["date"] = date
-                                audio["albumartist"] = creator
-                                audio["albumartistsort"] = creator
-                                audio["artistsort"] = creator
+                                audio["title"] = SONG_NAME
+                                audio["artist"] = CREATOR
+                                audio["album"] = ALBUM
+                                audio["tracknumber"] = TRACKNUMBER
+                                audio["date"] = DATE
+                                audio["albumartist"] = CREATOR
+                                audio["albumartistsort"] = CREATOR
+                                audio["artistsort"] = CREATOR
                                 audio["musicbrainz_artistid"] = MBID
-                                audio["originaldate"] = date
+                                audio["originaldate"] = DATE
                                 audio.save()
                                 os.rename(
-                                    source_dir + "/" + data_name,
-                                    source_dir + "/" + track_title,
+                                    SOURCE_DIR + "/" + DATA_NAME,
+                                    SOURCE_DIR + "/" + TRACK_TITLE,
                                 )
     cprint("Hey its me, DAVE, I got the stuff!", c="Black", b="Red", key="-ML-")
 
-window.close()
+WINDOW.close()
