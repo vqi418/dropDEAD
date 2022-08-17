@@ -24,18 +24,23 @@ BANDID = ""
 VENUE = ""
 VENUE_1 = ""
 VENUE_AVAIL = "ON"
-TOPICS_AVAIL = "ON"
+DATE_AVAIL = "ON"
+RECORDING = ""
+REC_AVAIL = "ON"
 TOPICS = ""
-CITY_AVAIL = "ON"
+TOPICS_AVAIL = "ON"
 CITY = ""
-SOURCE_AVAIL = "ON"
+CITY_AVAIL = "ON"
 SOURCE = ""
-COLLECTION_AVAIL = "ON"
+SOURCE_AVAIL = "ON"
 COLLECTION = ""
+COLLECTION_AVAIL = "ON"
 # LINEAGE_AVAIL = "ON"
 AUDIENCE = "OFF"
 SOUNDBOARD = "OFF"
-RECORDING = ""
+YEAR = ""
+MONTH = ""
+DAY = ""
 
 DEAD_BASE64 = (
     b"iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXM"
@@ -656,6 +661,7 @@ def _clean_(filename):
         .replace("->", "")
         .replace(">", "")
         .replace("/", " - ")
+        .replace("\\", " - ")
         .replace("*", "")
         .replace("!", "")
         .replace("'", "")
@@ -724,12 +730,41 @@ while True:
         SEARCH = Search(s, (QUERY1 + QUERY2))
         for result in SEARCH:
             XIDS.append(result["identifier"])
+        # for i in XIDS:
+        #     if MONTH != "":
+        #         ITEM = get_item(i)
+        #         DATE = ITEM.item_metadata["metadata"]["date"]
+        #         try:
+        #             VENUE_1 = ITEM.item_metadata["metadata"]["venue"]
+        #         except KeyError:
+        #             VENUE_AVAIL = "OFF"
+        #         finally:
+        #             try:
+        #                 TOPICS = ITEM.item_metadata["metadata"]["subject"]
+        #             except KeyError:
+        #                 SUBJECT_AVAIL = "OFF"
+        #             else:
+        #                 TOPICS = str(TOPICS)
+        #                 TOPICS = _clean_(TOPICS)
+        #             finally:
+        #                 if VENUE_AVAIL == "ON" and SUBJECT_AVAIL == "ON":
+        #                     SHOW = DATE + "-" + VENUE_1 + " - " + TOPICS
+        #                 elif VENUE_AVAIL == "OFF" and SUBJECT_AVAIL == "ON":
+        #                     SHOW = DATE + " - " + TOPICS
+        #                 elif VENUE_AVAIL == "ON" and SUBJECT_AVAIL == "OFF":
+        #                     SHOW = DATE + "-" + VENUE_1
+        #                 else:
+        #                     SHOW = DATE
         for i in XIDS:
             if MONTH != "":
                 AUDIENCE = "OFF"
                 SOUNDBOARD = "OFF"
                 ITEM = get_item(i)
-                DATE = ITEM.item_metadata["metadata"]["date"]
+                try:
+                    DATE = ITEM.item_metadata["metadata"]["date"]
+                except KeyError:
+                    DATE = YEAR + "-" + MONTH + "-" + DAY
+                    DATE_AVAIL = "OFF"
                 try:
                     VENUE_1 = ITEM.item_metadata["metadata"]["venue"]
                 except KeyError:
@@ -792,6 +827,8 @@ while True:
                         TOPICS = TOPICS.replace("Soundboard;", "")
                     if AUDIENCE == "ON":
                         RECORDING = "Audience"
+                    if SOUNDBOARD == "OFF" and AUDIENCE == "OFF":
+                        RECORDING = "-"
                     if (
                         VENUE_AVAIL == "ON"
                         and CITY_AVAIL == "ON"
@@ -871,7 +908,14 @@ while True:
                     ):
                         SHOW = DATE + "-" + VENUE_1 + " " + "[" + RECORDING + "]"
                     else:
-                        SHOW = DATE + " " + "[" + RECORDING + "]"
+                        try:
+                            SHOW = DATE + " " + "[" + RECORDING + "]"
+                        except NameError:
+                            REC_AVAIL = "OFF"
+                            try:
+                                SHOW = ITEM.item_metadata["metadata"]["title"]
+                            except KeyError:
+                                SHOW = ITEM
                     IDS.append(SHOW)
                     IDS2[SHOW] = i
                     FULL_DATE_SEARCH = "ON"
@@ -908,7 +952,10 @@ while True:
         ITEM = get_item(SHOW_ID)
         METADATA = ITEM.item_metadata
         CREATOR = METADATA["metadata"]["creator"]
-        DATE = METADATA["metadata"]["date"]
+        try:
+            DATE = METADATA["metadata"]["date"]
+        except KeyError:
+            DATE = YEAR + "-" + MONTH + "-" + DAY
         try:
             VENUE = METADATA["metadata"]["venue"]
         except KeyError:
