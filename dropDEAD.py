@@ -8,6 +8,7 @@ from internetarchive import get_item
 from mutagen.flac import FLAC
 from mutagen.easyid3 import EasyID3
 import PySimpleGUI as sg
+import requests
 
 s = ArchiveSession()
 
@@ -1085,6 +1086,19 @@ while True:
         for name in os.listdir(SOURCE_DIR):
             if BANDID == "GratefulDead":
                 MBID = "6faa7ca7-0d99-4a5e-bfa6-1fd5037520c6"
+                TIK_YEAR = DATE[2:4]
+                TIK_MONTH = DATE[5:7]
+                TIK_DAY = DATE[8:10]
+                URL = 'https://www.deadstubs.com/images/tickets/t'\
+                      + TIK_YEAR + TIK_MONTH + TIK_DAY + '.jpg'
+                response = requests.get(URL)
+                open(SOURCE_DIR + "/" + "t" + TIK_YEAR + TIK_MONTH
+                     + TIK_DAY + '.jpg', "wb").write(response.content)
+                URL2 = 'https://www.deadstubs.com/images/passes/b'\
+                       + TIK_YEAR + TIK_MONTH + TIK_DAY + '.jpg'
+                response = requests.get(URL2)
+                open(SOURCE_DIR + "/" + "b" + TIK_YEAR + TIK_MONTH
+                     + TIK_DAY + '.jpg', "wb").write(response.content)
             elif BANDID == "LittleFeat":
                 MBID = "9b106beb-12b5-4525-8025-42e295a2b90a"
             elif BANDID == "DeadAndCompany":
